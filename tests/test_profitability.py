@@ -2,6 +2,10 @@ import pytest
 import pandas as pd
 from src.analysis.profitability import compute_metrics, compute_composite_score, top_n, bottom_n
 
+# ---------------------------------------------------------------------------
+# Gap tests
+# ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def sample_df():
@@ -54,3 +58,21 @@ def test_top_n_sorted_descending(sample_df):
     result = top_n(sample_df, 3)
     scores = result["score_rentabilidad"].tolist()
     assert scores == sorted(scores, reverse=True)
+
+
+# ---------------------------------------------------------------------------
+# Gap tests
+# ---------------------------------------------------------------------------
+
+def test_gap1_roi_nan_when_zero_units():
+    """Gap documentado (rentabilidad.md): roi_mensual es NaN cuando unidades=0.
+    El módulo no maneja este caso — el denominador es cero."""
+    df = pd.DataFrame({
+        "nombre": ["SinVentas"],
+        "categoria": ["X"],
+        "precio_compra": [1.0],
+        "precio_venta": [2.0],
+        "unidades_vendidas_mes": [0],
+    })
+    result = compute_metrics(df)
+    assert pd.isna(result.loc[0, "roi_mensual"])

@@ -42,3 +42,28 @@ def test_to_dataframe_columns(df):
     result = recommendations_to_df(recs)
     for col in ("nombre", "categoria", "decision", "confianza", "alternativa", "razonamiento"):
         assert col in result.columns
+
+
+# ---------------------------------------------------------------------------
+# Gap tests
+# ---------------------------------------------------------------------------
+
+def test_gap2_alternative_may_point_to_low_score_product():
+    """Gap documentado (recomendaciones.md): la alternativa sugerida no se filtra
+    por umbral — puede apuntar a otro producto que también tiene score bajo."""
+    df = pd.DataFrame({
+        "nombre": ["Lider1", "Lider2", "Flojo", "FlojoPeor"],
+        "categoria": ["A", "A", "B", "B"],
+        "precio_compra": [1.0, 1.0, 5.0, 5.0],
+        "precio_venta": [10.0, 9.0, 5.5, 5.3],
+        "unidades_vendidas_mes": [1000, 900, 1, 1],
+    })
+    recs_df = recommendations_to_df(generate_recommendations(df))
+
+    for nombre in ("Flojo", "FlojoPeor"):
+        row = recs_df[recs_df["nombre"] == nombre].iloc[0]
+        assert row["decision"] == "USAR_ALTERNATIVA"
+        # La alternativa sugerida es el otro producto de categoría B,
+        # que también tiene score muy bajo (debería ser NO_COMPRAR por su propio mérito).
+        assert row["alternativa"] in ("Flojo", "FlojoPeor")
+        assert row["alternativa"] != nombre

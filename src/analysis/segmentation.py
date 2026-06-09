@@ -1,5 +1,7 @@
 """Product segmentation by rotation, margin and profitability using KMeans."""
 
+import warnings
+
 import pandas as pd
 import numpy as np
 from sklearn.cluster import KMeans
@@ -24,9 +26,26 @@ def segment_products(df: pd.DataFrame) -> pd.DataFrame:
     """
     from src.analysis.profitability import compute_metrics
 
+    if len(df) < _N_CLUSTERS:
+        raise ValueError(
+            f"Se requieren al menos {_N_CLUSTERS} productos para segmentar, "
+            f"pero se recibieron {len(df)}."
+        )
+
     df = compute_metrics(df.copy())
 
-    features = df[["unidades_vendidas_mes", "margen_pct", "beneficio_mensual"]].values
+    feature_cols = ["unidades_vendidas_mes", "margen_pct", "beneficio_mensual"]
+    features = df[feature_cols].values
+
+    zero_var = [col for col, std in zip(feature_cols, features.std(axis=0)) if std == 0]
+    if zero_var:
+        warnings.warn(
+            f"varianza cero detectada en features: {zero_var}. "
+            "El clustering con productos idénticos produce resultados indeterminados.",
+            UserWarning,
+            stacklevel=2,
+        )
+
     scaler = StandardScaler()
     scaled = scaler.fit_transform(features)
 

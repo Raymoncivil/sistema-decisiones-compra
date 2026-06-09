@@ -18,8 +18,6 @@ def df_4():
 # Gap tests
 # ---------------------------------------------------------------------------
 
-@pytest.mark.xfail(reason="gap (segmentacion.md): no hay validación propia antes del fallo de KMeans — "
-                           "sklearn lanza ValueError con mensaje técnico poco claro para el usuario")
 def test_gap3_fewer_than_4_products_clear_error():
     """Con < 4 productos KMeans falla, pero con el mensaje de sklearn, no el nuestro.
     Al corregir el gap, segment_products debe lanzar ValueError con mensaje en español
@@ -35,8 +33,6 @@ def test_gap3_fewer_than_4_products_clear_error():
         segment_products(df)
 
 
-@pytest.mark.xfail(reason="gap (segmentacion.md): productos con valores idénticos (std=0 en features) "
-                           "no emiten advertencia — el clustering resultante es indeterminado")
 def test_gap4_identical_products_should_warn():
     """Cuando todos los productos tienen las mismas métricas, StandardScaler produce
     varianza cero. El módulo debería advertirlo. Actualmente no emite ninguna advertencia."""

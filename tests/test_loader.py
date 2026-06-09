@@ -46,8 +46,6 @@ def test_invalid_data_raises(tmp_path):
 # Gap tests
 # ---------------------------------------------------------------------------
 
-@pytest.mark.xfail(reason="gap (carga_datos.md): precio_compra como string lanza TypeError de pandas "
-                           "en vez de un ValueError con mensaje claro sobre el campo problemático")
 def test_gap6_string_price_raises_clear_value_error(tmp_path):
     """Cuando precio_compra contiene texto, pandas lo lee como object dtype.
     La comparación <= 0 lanza TypeError. Al corregir el gap, debe lanzar
@@ -61,8 +59,6 @@ def test_gap6_string_price_raises_clear_value_error(tmp_path):
         load_products(csv)
 
 
-@pytest.mark.xfail(reason="gap (carga_datos.md): CSV sin filas de datos pasa la validación "
-                           "y devuelve DataFrame vacío en lugar de lanzar ValueError")
 def test_gap7_empty_csv_raises_value_error(tmp_path):
     """Un CSV con solo cabecera supera _validate (sin filas no hay nada que viole
     restricciones) y devuelve un DataFrame vacío. Los módulos de análisis fallarán
@@ -73,8 +69,6 @@ def test_gap7_empty_csv_raises_value_error(tmp_path):
         load_products(csv)
 
 
-@pytest.mark.xfail(reason="gap (carga_datos.md): CSV con separador ';' falla con 'columnas faltantes' "
-                           "en vez de un mensaje que indique el problema real del separador")
 def test_gap8_semicolon_separator_raises_clear_error(tmp_path):
     """pandas lee el CSV como una sola columna larga (ej. 'nombre;precio_compra;...').
     La validación entonces lanza ValueError sobre columnas faltantes, ocultando

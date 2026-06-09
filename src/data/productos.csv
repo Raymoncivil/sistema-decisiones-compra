@@ -1,0 +1,21 @@
+nombre,precio_compra,precio_venta,unidades_vendidas_mes,categoria
+Arroz Largo Fino 1kg,0.85,1.50,320,Alimentación
+Aceite de Oliva 1L,3.20,5.90,145,Alimentación
+Leche Entera 1L,0.72,1.20,410,Lácteos
+Yogur Natural Pack x4,0.95,1.75,230,Lácteos
+Queso Manchego 250g,2.80,4.95,88,Lácteos
+Detergente Ropa 3L,4.10,7.50,175,Limpieza
+Lejía 2L,0.60,1.10,290,Limpieza
+Papel Higiénico x12,2.90,5.20,310,Higiene
+Champú Hidratante 400ml,1.80,3.40,95,Higiene
+Pasta de Dientes 75ml,0.70,1.30,210,Higiene
+Café Molido 250g,2.40,4.20,160,Bebidas
+Zumo Naranja 1L,0.90,1.60,185,Bebidas
+Agua Mineral 6x1.5L,1.50,2.80,420,Bebidas
+Cerveza Pack x6,3.80,6.50,130,Bebidas
+Galletas Integrales 400g,1.10,2.00,145,Snacks
+Patatas Fritas 150g,0.55,1.10,260,Snacks
+Chocolate Negro 100g,0.80,1.60,115,Snacks
+Atún en Lata Pack x3,2.20,3.90,200,Conservas
+Tomate Triturado 800g,0.65,1.15,275,Conservas
+Lentejas 500g,0.90,1.70,90,Conservas

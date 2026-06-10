@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -9,6 +10,8 @@ from .data_agent import DataAgent
 from .analysis_agent import AnalysisAgent
 from .report_agent import ReportAgent
 from .base import AgentResult
+
+log = logging.getLogger("Orchestrator")
 
 
 @dataclass
@@ -49,20 +52,26 @@ class Orchestrator:
     def run(self, csv_path: Path | str) -> OrquestadorResult:
         t0 = time.perf_counter()
         pipeline: list[AgentResult] = []
+        log.info("=== pipeline iniciado | archivo: %s ===", Path(csv_path).name)
 
         # ── Paso 1: carga y validación ──────────────────────────────────────
+        log.info("[1/3] DataAgent")
         data_result = self._data_agent.run(csv_path)
         pipeline.append(data_result)
         if data_result.failed:
+            log.error("pipeline abortado en DataAgent")
             return self._abort(pipeline, data_result.error, t0)
 
         # ── Paso 2: análisis y segmentación ──────────────────────────────────
+        log.info("[2/3] AnalysisAgent")
         analysis_result = self._analysis_agent.run(data_result.data["df"])
         pipeline.append(analysis_result)
         if analysis_result.failed:
+            log.error("pipeline abortado en AnalysisAgent")
             return self._abort(pipeline, analysis_result.error, t0)
 
         # ── Paso 3: recomendaciones y reporte ────────────────────────────────
+        log.info("[3/3] ReportAgent")
         report_result = self._report_agent.run(
             df_ranked=analysis_result.data["df_ranked"],
             df_segmented=analysis_result.data["df_segmented"],
@@ -70,6 +79,7 @@ class Orchestrator:
         )
         pipeline.append(report_result)
         if report_result.failed:
+            log.error("pipeline abortado en ReportAgent")
             return self._abort(pipeline, report_result.error, t0)
 
         reporte = {
@@ -84,11 +94,13 @@ class Orchestrator:
             },
         }
 
+        total_ms = round((time.perf_counter() - t0) * 1000, 2)
+        log.info("=== pipeline completado en %.2f ms ===", total_ms)
         return OrquestadorResult(
             success=True,
             reporte=reporte,
             pipeline=pipeline,
-            duration_ms=round((time.perf_counter() - t0) * 1000, 2),
+            duration_ms=total_ms,
         )
 
     @staticmethod

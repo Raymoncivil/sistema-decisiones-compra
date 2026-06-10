@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import time
 from dataclasses import dataclass, field
 from typing import Any
@@ -23,12 +24,18 @@ class AgentError(Exception):
 
 
 def timed(agent_name: str):
-    """Decorator that wraps a run() method and fills AgentResult timing."""
+    """Decorator that wraps a run() method, fills AgentResult timing, and emits start/end logs."""
     def decorator(fn):
         def wrapper(*args, **kwargs) -> AgentResult:
+            log = logging.getLogger(agent_name)
+            log.info("iniciando")
             t0 = time.perf_counter()
             result: AgentResult = fn(*args, **kwargs)
             result.duration_ms = round((time.perf_counter() - t0) * 1000, 2)
+            if result.success:
+                log.info("completado en %.2f ms", result.duration_ms)
+            else:
+                log.error("FALLO en %.2f ms — %s", result.duration_ms, result.error)
             return result
         return wrapper
     return decorator

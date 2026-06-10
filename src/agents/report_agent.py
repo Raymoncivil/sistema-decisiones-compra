@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import logging
+
 import pandas as pd
 
 from src.recommendations.engine import generate_recommendations
 from .base import AgentResult, timed
 
 AGENT_NAME = "ReportAgent"
+log = logging.getLogger(AGENT_NAME)
 
 
 class ReportAgent:
@@ -13,11 +16,19 @@ class ReportAgent:
 
     @timed(AGENT_NAME)
     def run(self, df_ranked: pd.DataFrame, df_segmented: pd.DataFrame, segment_summary: pd.DataFrame) -> AgentResult:
+        log.debug("generando recomendaciones para %d productos...", len(df_ranked))
         try:
             recomendaciones = generate_recommendations(df_ranked)
         except Exception as exc:
             return AgentResult(agent=AGENT_NAME, success=False, error=str(exc))
 
+        conteo = {d: sum(1 for r in recomendaciones if r.decision == d)
+                  for d in ("COMPRAR", "NO_COMPRAR", "USAR_ALTERNATIVA")}
+
+        for decision, n in conteo.items():
+            log.debug("  %-20s : %d", decision, n)
+
+        log.debug("serializando reporte final...")
         recs_json = [
             {
                 "nombre": r.nombre,
@@ -41,9 +52,6 @@ class ReportAgent:
             }
             for segmento, row in segment_summary.iterrows()
         ]
-
-        conteo = {d: sum(1 for r in recomendaciones if r.decision == d)
-                  for d in ("COMPRAR", "NO_COMPRAR", "USAR_ALTERNATIVA")}
 
         return AgentResult(
             agent=AGENT_NAME,

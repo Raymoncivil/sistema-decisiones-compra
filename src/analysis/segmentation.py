@@ -66,10 +66,9 @@ def segment_products(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def segment_summary(df: pd.DataFrame) -> pd.DataFrame:
-    """Aggregate stats per segment."""
-    from src.analysis.profitability import compute_metrics
-
-    df = segment_products(df)
+    """Aggregate stats per segment. Expects df already segmented (has 'segmento' column)."""
+    if "segmento" not in df.columns:
+        df = segment_products(df)
     return (
         df.groupby("segmento")
         .agg(

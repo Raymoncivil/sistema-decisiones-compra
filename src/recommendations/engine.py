@@ -23,6 +23,7 @@ class Recommendation:
     decision: Decision
     confianza: float          # 0.0 – 1.0
     razonamiento: str
+    score: float = 0.0
     alternativa: str | None = None
 
 
@@ -100,6 +101,7 @@ def generate_recommendations(df: pd.DataFrame) -> list[Recommendation]:
                 decision=decision,
                 confianza=_confidence(score, decision),
                 razonamiento=_build_reasoning(row, decision),
+                score=round(float(score), 4),
                 alternativa=alternativa,
             )
         )

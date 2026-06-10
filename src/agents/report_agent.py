@@ -23,6 +23,7 @@ class ReportAgent:
                 "nombre": r.nombre,
                 "categoria": r.categoria,
                 "decision": r.decision,
+                "score": r.score,
                 "confianza": round(r.confianza, 4),
                 "razonamiento": r.razonamiento,
                 "alternativa": r.alternativa,

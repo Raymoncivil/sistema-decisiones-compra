@@ -18,7 +18,18 @@ class ResumenSegmento(BaseModel):
     rotacion_promedio: float
 
 
+class MetricasPipeline(BaseModel):
+    archivo: str
+    filas_cargadas: int
+    score_max: float
+    score_min: float
+    segmentos_encontrados: list[str]
+    tiempos_ms: dict[str, float]
+
+
 class RespuestaAnalisis(BaseModel):
     total_productos: int
+    conteo_decisiones: dict[str, int]
     recomendaciones: list[RecomendacionProducto]
     resumen_segmentos: list[ResumenSegmento]
+    metricas_pipeline: MetricasPipeline

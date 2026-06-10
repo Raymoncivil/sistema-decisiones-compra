@@ -26,8 +26,25 @@ class TestAnalizar:
         assert resp.status_code == 200
         data = resp.json()
         assert "total_productos" in data
+        assert "conteo_decisiones" in data
         assert "recomendaciones" in data
         assert "resumen_segmentos" in data
+        assert "metricas_pipeline" in data
+
+    def test_metricas_pipeline_campos(self):
+        resp = client.post("/analizar", files=[_csv_file(VALID_CSV)])
+        m = resp.json()["metricas_pipeline"]
+        assert m["archivo"].endswith(".csv")
+        assert m["filas_cargadas"] == 5
+        assert 0.0 <= m["score_min"] <= m["score_max"] <= 1.0
+        assert "DataAgent" in m["tiempos_ms"]
+        assert "AnalysisAgent" in m["tiempos_ms"]
+        assert "ReportAgent" in m["tiempos_ms"]
+
+    def test_conteo_decisiones_suma_total(self):
+        resp = client.post("/analizar", files=[_csv_file(VALID_CSV)])
+        data = resp.json()
+        assert sum(data["conteo_decisiones"].values()) == data["total_productos"]
 
     def test_total_productos_correcto(self):
         resp = client.post("/analizar", files=[_csv_file(VALID_CSV)])

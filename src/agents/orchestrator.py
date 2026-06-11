@@ -10,6 +10,7 @@ from .data_agent import DataAgent
 from .analysis_agent import AnalysisAgent
 from .report_agent import ReportAgent
 from .base import AgentResult
+from src.reports import generate_pdf
 
 log = logging.getLogger("Orchestrator")
 
@@ -49,7 +50,11 @@ class Orchestrator:
         self._analysis_agent = AnalysisAgent()
         self._report_agent = ReportAgent()
 
-    def run(self, csv_path: Path | str) -> OrquestadorResult:
+    def run(
+        self,
+        csv_path: Path | str,
+        pdf_output: Path | str | None = None,
+    ) -> OrquestadorResult:
         t0 = time.perf_counter()
         pipeline: list[AgentResult] = []
         log.info("=== pipeline iniciado | archivo: %s ===", Path(csv_path).name)
@@ -93,6 +98,9 @@ class Orchestrator:
                 "tiempos_ms": {r.agent: r.duration_ms for r in pipeline},
             },
         }
+
+        if pdf_output is not None:
+            generate_pdf(reporte, output_path=pdf_output)
 
         total_ms = round((time.perf_counter() - t0) * 1000, 2)
         log.info("=== pipeline completado en %.2f ms ===", total_ms)

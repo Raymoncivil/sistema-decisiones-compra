@@ -28,6 +28,7 @@ class MetricasPipeline(BaseModel):
 
 
 class RespuestaAnalisis(BaseModel):
+    reporte_id: str
     total_productos: int
     conteo_decisiones: dict[str, int]
     recomendaciones: list[RecomendacionProducto]

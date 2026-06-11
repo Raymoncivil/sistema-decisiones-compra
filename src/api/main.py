@@ -1,9 +1,12 @@
 import tempfile
+import uuid
 from pathlib import Path
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi.responses import FileResponse
 
 from src.agents.orchestrator import Orchestrator
+from src.reports import generate_pdf
 
 from .models import MetricasPipeline, RecomendacionProducto, ResumenSegmento, RespuestaAnalisis
 
@@ -14,6 +17,12 @@ app = FastAPI(
 )
 
 _orchestrator = Orchestrator()
+
+_REPORTS_DIR = Path(tempfile.gettempdir()) / "sdcompra_reports"
+_REPORTS_DIR.mkdir(exist_ok=True)
+
+# Maps reporte_id -> PDF path; lives for the duration of the server process.
+_reports: dict[str, Path] = {}
 
 
 @app.post("/analizar", response_model=RespuestaAnalisis)
@@ -33,13 +42,18 @@ async def analizar(archivo: UploadFile = File(..., description="CSV con columnas
         tmp_path.unlink(missing_ok=True)
 
     if resultado.failed:
-        status = _status_code(resultado)
-        raise HTTPException(status_code=status, detail=resultado.error)
+        raise HTTPException(status_code=_status_code(resultado), detail=resultado.error)
+
+    reporte_id = str(uuid.uuid4())
+    pdf_path = _REPORTS_DIR / f"{reporte_id}.pdf"
+    generate_pdf(resultado.reporte, output_path=pdf_path)
+    _reports[reporte_id] = pdf_path
 
     r = resultado.reporte
     m = r["metricas_pipeline"]
 
     return RespuestaAnalisis(
+        reporte_id=reporte_id,
         total_productos=r["total_productos"],
         conteo_decisiones=r["conteo_decisiones"],
         recomendaciones=[RecomendacionProducto(**rec) for rec in r["recomendaciones"]],
@@ -55,14 +69,22 @@ async def analizar(archivo: UploadFile = File(..., description="CSV con columnas
     )
 
 
+@app.get("/reporte/{reporte_id}")
+async def descargar_reporte(reporte_id: str):
+    pdf_path = _reports.get(reporte_id)
+    if pdf_path is None or not pdf_path.exists():
+        raise HTTPException(status_code=404, detail="Reporte no encontrado.")
+    return FileResponse(
+        path=pdf_path,
+        media_type="application/pdf",
+        filename=f"reporte_{reporte_id[:8]}.pdf",
+    )
+
+
 def _status_code(resultado) -> int:
-    """Mapea el agente fallido a un código HTTP semánticamente correcto."""
     agent = resultado.failed_agent
     if agent is None:
         return 500
-    if agent.agent == "DataAgent":
-        # FileNotFoundError no ocurre (usamos tmp), todo lo demás es validación
-        return 422
-    if agent.agent == "AnalysisAgent":
+    if agent.agent in ("DataAgent", "AnalysisAgent"):
         return 422
     return 500

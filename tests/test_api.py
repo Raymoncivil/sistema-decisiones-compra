@@ -109,6 +109,33 @@ class TestAnalizar:
         assert resp.status_code == 422
 
 
+# ── POST /analizar?formato=pdf ────────────────────────────────────────────────
+
+class TestAnalizarFormatoPdf:
+    def test_devuelve_pdf(self):
+        resp = client.post("/analizar?formato=pdf", files=[_csv_file(VALID_CSV)])
+        assert resp.status_code == 200
+        assert resp.headers["content-type"] == "application/pdf"
+
+    def test_cuerpo_es_pdf_valido(self):
+        resp = client.post("/analizar?formato=pdf", files=[_csv_file(VALID_CSV)])
+        assert resp.content[:4] == b"%PDF"
+
+    def test_content_disposition_incluye_nombre(self):
+        resp = client.post("/analizar?formato=pdf", files=[_csv_file(VALID_CSV)])
+        assert "reporte_" in resp.headers.get("content-disposition", "")
+
+    def test_sin_formato_sigue_devolviendo_json(self):
+        resp = client.post("/analizar", files=[_csv_file(VALID_CSV)])
+        assert resp.status_code == 200
+        assert "application/json" in resp.headers["content-type"]
+        assert "reporte_id" in resp.json()
+
+    def test_formato_invalido_devuelve_422(self):
+        resp = client.post("/analizar?formato=excel", files=[_csv_file(VALID_CSV)])
+        assert resp.status_code == 422
+
+
 # ── GET /reporte/{id} ─────────────────────────────────────────────────────────
 
 class TestDescargarReporte:

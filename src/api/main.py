@@ -2,7 +2,9 @@ import tempfile
 import uuid
 from pathlib import Path
 
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from typing import Literal
+
+from fastapi import FastAPI, File, HTTPException, Query, UploadFile
 from fastapi.responses import FileResponse
 
 from src.agents.orchestrator import Orchestrator
@@ -25,8 +27,15 @@ _REPORTS_DIR.mkdir(exist_ok=True)
 _reports: dict[str, Path] = {}
 
 
-@app.post("/analizar", response_model=RespuestaAnalisis)
-async def analizar(archivo: UploadFile = File(..., description="CSV con columnas: nombre, precio_compra, precio_venta, unidades_vendidas_mes, categoria")):
+@app.post(
+    "/analizar",
+    response_model=RespuestaAnalisis,
+    responses={200: {"content": {"application/pdf": {}}, "description": "JSON o PDF según ?formato"}},
+)
+async def analizar(
+    archivo: UploadFile = File(..., description="CSV con columnas: nombre, precio_compra, precio_venta, unidades_vendidas_mes, categoria"),
+    formato: Literal["pdf"] | None = Query(default=None, description="Si es 'pdf', devuelve el reporte en PDF en lugar de JSON."),
+):
     if not archivo.filename.endswith(".csv"):
         raise HTTPException(status_code=400, detail="El archivo debe ser un CSV.")
 
@@ -48,6 +57,13 @@ async def analizar(archivo: UploadFile = File(..., description="CSV con columnas
     pdf_path = _REPORTS_DIR / f"{reporte_id}.pdf"
     generate_pdf(resultado.reporte, output_path=pdf_path)
     _reports[reporte_id] = pdf_path
+
+    if formato == "pdf":
+        return FileResponse(
+            path=pdf_path,
+            media_type="application/pdf",
+            filename=f"reporte_{reporte_id[:8]}.pdf",
+        )
 
     r = resultado.reporte
     m = r["metricas_pipeline"]

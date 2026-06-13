@@ -2,12 +2,12 @@
 # Run from the project root:  .\start.ps1
 
 $api = Start-Process -NoNewWindow -PassThru `
-    -FilePath "uvicorn" `
-    -ArgumentList "src.api.main:app", "--reload", "--port", "8000"
+    -FilePath "python" `
+    -ArgumentList "-m", "uvicorn", "src.api.main:app", "--reload", "--port", "8000"
 
 $dashboard = Start-Process -NoNewWindow -PassThru `
-    -FilePath "streamlit" `
-    -ArgumentList "run", "dashboard/app.py", "--server.port", "8501"
+    -FilePath "python" `
+    -ArgumentList "-m", "streamlit", "run", "dashboard/app.py", "--server.port", "8501"
 
 Write-Host "API      -> http://localhost:8000  (PID $($api.Id))"
 Write-Host "Dashboard -> http://localhost:8501  (PID $($dashboard.Id))"
